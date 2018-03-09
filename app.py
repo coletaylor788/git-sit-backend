@@ -15,7 +15,7 @@ def hello():
 @app.route('/get-current-occupancy', methods=["POST"])
 def get_current_occupancy():
     if Flask.request.method == "POST":
-        building_id = Flask.request.values.get('schedule')
+        building_id = Flask.request.values.get('location-id')
         return "{occupancy: " + str(random.random()) + "}"
 
 """
