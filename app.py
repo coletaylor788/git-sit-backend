@@ -1,6 +1,7 @@
 import os
 import flask as Flask
 from flask_cors import CORS
+import random
 
 app = Flask.Flask(__name__, static_url_path='')
 CORS(app)
@@ -9,6 +10,13 @@ CORS(app)
 @app.route('/')
 def hello():
     return 'Hello World!'
+
+
+@app.route('/get-current-occupancy')
+def get_current_occupancy():
+    if Flask.request.method == "POST":
+        building_id = Flask.request.values.get('schedule')
+        return "{occupancy: " + str(random.random()) + "}"
 
 """
 Main method starts the Flask server
