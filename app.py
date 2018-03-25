@@ -12,7 +12,7 @@ app = Flask.Flask(__name__, static_url_path='')
 CORS(app)
 
 #ONLY HAVE THIS IN TESTING
-# conn=dbTool.connect(dbname="postgres", user="postgres", password="happywonder")
+# conn=dbTool.connect(dbname="postgres", user="postgres", password="jakeiscool")
 
 #ONLY HAVE THIS IN PROD
 DATABASE_URL = os.environ['DATABASE_URL']
@@ -45,9 +45,8 @@ def get_current_occupancy():
     results = db.executeReadQuery(q , conn)
     print(results)
     sum = reduce((lambda x,y: x[0] + y[0]), results)
-    averageClientCount = sum/len(results)
     # return "{occupancy: " + str(random.random()) + "}"
-    return "{'occupancy': " + str(averageClientCount) + "}"
+    return "{'occupancy': " + str(sum) + "}"
     
 """
 Main method starts the Flask server
