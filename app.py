@@ -44,9 +44,9 @@ def get_current_occupancy():
     q = getClientsWithinDateRangeByAP(building_id, lower, upper)
     results = db.executeReadQuery(q , conn)
     print(results)
-    sum = sum(reduce((lambda x,y: x + y), results))
+    x = sum(reduce((lambda x,y: x + y), results))
     # return "{occupancy: " + str(random.random()) + "}"
-    return "{'occupancy': " + str(sum) + "}"
+    return "{'occupancy': " + str(x) + "}"
     
 """
 Main method starts the Flask server
