@@ -5,5 +5,6 @@ def executeReadQuery(query, conn):
     cur.execute(query)
     response = cur.fetchall()
     cur.close()
+    print("Executed query: " + query)
     return response
    
