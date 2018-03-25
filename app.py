@@ -15,8 +15,8 @@ CORS(app)
 conn=dbTool.connect(dbname="postgres", user="postgres", password="happywonder")
 
 #ONLY HAVE THIS IN PROD
-# DATABASE_URL = os.environ['DATABASE_URL']
-# conn = dbTool.connect(DATABASE_URL, sslmode='require')
+DATABASE_URL = os.environ['DATABASE_URL']
+conn = dbTool.connect(DATABASE_URL, sslmode='require')
 
 def getClientsWithinDateRangeByAP(building, lowerDate, upperDate):
     return "SELECT avg(clients) FROM occupancy where building='" + building + "' AND date > '" + str(lowerDate) + "' AND date < '" + str(upperDate) + "' GROUP BY ap_name"
@@ -55,8 +55,8 @@ Main method starts the Flask server
 if __name__ == '__main__':
     # Bind to PORT if defined, otherwise default to 5000.
     port = int(os.environ.get('PORT', 5000))
-    # app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=port)
 
     #TESTING ONLY! Leave commented in production
-    app.run(host='127.0.0.1', port=port)
+    # app.run(host='127.0.0.1', port=port)
    
