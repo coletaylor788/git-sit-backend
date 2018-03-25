@@ -12,7 +12,7 @@ app = Flask.Flask(__name__, static_url_path='')
 CORS(app)
 
 #ONLY HAVE THIS IN TESTING
-conn=dbTool.connect(dbname="postgres", user="postgres", password="happywonder")
+# conn=dbTool.connect(dbname="postgres", user="postgres", password="happywonder")
 
 #ONLY HAVE THIS IN PROD
 DATABASE_URL = os.environ['DATABASE_URL']
