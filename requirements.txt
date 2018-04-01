@@ -5,3 +5,4 @@ peakutils
 numpy
 panda
 psycopg2-binary
+firebase-admin
