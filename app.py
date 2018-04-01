@@ -24,15 +24,24 @@ def get_clients_around_date_by_building_floor(building, floor, date):
 
     entries = db.child(building).order_by_key().start_at(lower_date_str).end_at(upper_date_str).get().val()
 
-    record_count = 0
-    client_count = 0
+    # Consolidate into map from AP to clients
+    ap_clients = {}
     for _, value in entries.items():
-        ap_floor = value[1][value[1].find('-') + 1] # Note both floor and ap_floor are strings
+        ap_name = value[1]
+        ap_floor = ap_name[ap_name.find('-') + 1]
+        clients = int(value[0])
         if ap_floor == floor:
-            client_count += value[0]
-            record_count += 1
+            if ap_name in ap_clients.keys(): # Average the values
+                ap_clients[ap_name].append(clients)
+            else:
+                ap_clients[ap_name] = [clients]
+    
+    # Average counts of the same AP
+    ap_clients_count = {}
+    for ap_name, client_list in ap_clients.items():
+        ap_clients_count[ap_name] = int(round(sum(client_list) / len(client_list)))
 
-    return 0 if record_count == 0 else int(round(client_count / record_count))
+    return 0 if len(ap_clients_count.values()) == 0 else sum(ap_clients_count.values())
 
 def getMappedDate(date):
     date = date.replace(year=2015, month=1)
@@ -69,8 +78,8 @@ Main method starts the Flask server
 if __name__ == '__main__':
     # Bind to PORT if defined, otherwise default to 5000.
     port = int(os.environ.get('PORT', 5000))
-    #app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=port)
 
     #TESTING ONLY! Leave commented in production
-    app.run(host='127.0.0.1', port=port)
+    #app.run(host='127.0.0.1', port=port)
    
