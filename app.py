@@ -17,20 +17,19 @@ db = connect_to_database()
 def get_clients_around_date_by_building_floor(building, floor, date):
     lower_date = date + datetime.timedelta(0,-1 * OCCUPANCY_WINDOW)
     upper_date = date + datetime.timedelta(0,OCCUPANCY_WINDOW)
-    entries = db.child(building).get().val()
-    
-    in_range_items = []
-    for key, value in entries.items():
-       item_date = datetime.datetime.strptime(key, '%b %d %H:%M:%S %Y')
-       if item_date >= lower_date and item_date <= upper_date:
-           in_range_items.append(value)
+
+    # Convert to format in database
+    lower_date_str = lower_date.strftime("%b %d %H:%M:%S %Y")
+    upper_date_str = upper_date.strftime("%b %d %H:%M:%S %Y")
+
+    entries = db.child(building).order_by_key().start_at(lower_date_str).end_at(upper_date_str).get().val()
 
     record_count = 0
     client_count = 0
-    for item in in_range_items:
-        ap_floor = item[1][0] # Note both floor and ap_floor are strings
+    for _, value in entries.items():
+        ap_floor = value[1][value[1].find('-') + 1] # Note both floor and ap_floor are strings
         if ap_floor == floor:
-            client_count += item[0]
+            client_count += value[0]
             record_count += 1
 
     return 0 if record_count == 0 else int(round(client_count / record_count))
@@ -70,8 +69,8 @@ Main method starts the Flask server
 if __name__ == '__main__':
     # Bind to PORT if defined, otherwise default to 5000.
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    #app.run(host='0.0.0.0', port=port)
 
     #TESTING ONLY! Leave commented in production
-    #app.run(host='127.0.0.1', port=port)
+    app.run(host='127.0.0.1', port=port)
    
