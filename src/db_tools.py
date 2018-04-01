@@ -3,12 +3,13 @@ from os import environ
 import json
 
 def connect_to_database():
+
+    # Must read from environment variables for security
     auth_dict = {}
     auth_dict['type'] = environ.get('type')
     auth_dict['project_id'] = environ.get('project_id')
     auth_dict['private_key_id'] = environ.get('private_key_id')
-    auth_dict['private_key'] = environ.get('private_key')#.replace('\\', 'j')
-    #print(environ.get('private_key'))
+    auth_dict['private_key'] = environ.get('private_key')
     auth_dict['client_email'] = environ.get('client_email')
     auth_dict['client_id'] = environ.get('client_id')
     auth_dict['auth_uri'] = environ.get('auth_uri')
