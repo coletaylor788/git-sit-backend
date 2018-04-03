@@ -14,15 +14,23 @@ CORS(app)
 
 db = connect_to_database()
 
+import sys
 def get_clients_around_date_by_building_floor(building, floor, date):
     lower_date = date + datetime.timedelta(0,-1 * OCCUPANCY_WINDOW)
     upper_date = date + datetime.timedelta(0,OCCUPANCY_WINDOW)
 
     # Convert to format in database
     lower_date_str = lower_date.strftime("%b %d %H:%M:%S %Y")
+    if lower_date_str[4] == '0':
+        lower_date_str = lower_date_str[:4] + lower_date_str[4 + 1:]
     upper_date_str = upper_date.strftime("%b %d %H:%M:%S %Y")
-
+    if upper_date_str[4] == '0':
+        upper_date_str = upper_date_str[:4] + upper_date_str[4 + 1:]
+    
     entries = db.child(building).order_by_key().start_at(lower_date_str).end_at(upper_date_str).get().val()
+    
+    #TODO Calling .val on the query above throws an exception if no data is found
+    # Should gracefully handle this
 
     # Consolidate into map from AP to clients
     ap_clients = {}
@@ -78,8 +86,8 @@ Main method starts the Flask server
 if __name__ == '__main__':
     # Bind to PORT if defined, otherwise default to 5000.
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    #app.run(host='0.0.0.0', port=port)
 
     #TESTING ONLY! Leave commented in production
-    #app.run(host='127.0.0.1', port=port)
+    app.run(host='127.0.0.1', port=port)
    
