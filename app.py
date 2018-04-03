@@ -58,7 +58,7 @@ def get_current_occupancy():
     building_id = Flask.request.get_json()['location-id']
     floor = Flask.request.get_json()['floor']
     date = getMappedDate(datetime.datetime.now())
-
+    
     occ = get_clients_around_date_by_building_floor(building_id, floor, date)
     return "{'occupancy': " + str(occ) + "}"
     
