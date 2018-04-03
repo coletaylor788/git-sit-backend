@@ -8,3 +8,4 @@ psycopg2-binary
 firebase-admin
 pyrebase
 sklearn
+requests=2.11.1
