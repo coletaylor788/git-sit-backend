@@ -71,4 +71,31 @@ def writeFloorCountsToFile():
             for minute in floor_minute_counts[building][floor]:
                 writer.writerow([building,floor,minute,floor_minute_counts[building][floor][minute]])
 
-main()
+#main()
+
+def build_independent_dataset():
+    in_file = 'out.csv'
+    out_file = 'independent_dataset.csv'
+    f = open(in_file, 'r')
+    reader = csv.reader(f)
+
+    out = open(out_file, 'w', newline='')
+    writer = csv.writer(out)
+    writer.writerow(['building', 'floor', 'day_of_week', 'hour', 'minute', 'count'])
+    
+    base_date = datetime.datetime(2015, 1, 1) 
+    next(reader) #Need to skip the title row
+    for row in reader:
+      building = row[0]
+      floor = row[1]
+      minute = row[2]
+      minute_offset = datetime.timedelta(minutes=int(minute))
+      new_date = base_date + minute_offset
+      day_of_week = new_date.weekday()
+      time = new_date.time()  
+
+      count = row[3]
+
+      writer.writerow([building, floor, day_of_week, time.hour, time.minute, count])
+
+build_independent_dataset()
