@@ -28,7 +28,6 @@ def get_clients_around_date_by_building_floor(building, floor, date):
         upper_date_str = upper_date_str[:4] + upper_date_str[4 + 1:]
     
     entries = db.child(building).order_by_key().start_at(lower_date_str).end_at(upper_date_str).get().val()
-    
     #TODO Calling .val on the query above throws an exception if no data is found
     # Should gracefully handle this
 
@@ -38,18 +37,18 @@ def get_clients_around_date_by_building_floor(building, floor, date):
         ap_name = value[1]
         ap_floor = ap_name[ap_name.find('-') + 1]
         clients = int(value[0])
-        if ap_floor == floor:
+        if ap_floor == str(floor):
             if ap_name in ap_clients.keys(): # Average the values
                 ap_clients[ap_name].append(clients)
             else:
                 ap_clients[ap_name] = [clients]
-    
+
     # Average counts of the same AP
     ap_clients_count = {}
     for ap_name, client_list in ap_clients.items():
-        ap_clients_count[ap_name] = int(round(sum(client_list) / len(client_list)))
+        ap_clients_count[ap_name] = round(sum(client_list) / len(client_list))
 
-    return 0 if len(ap_clients_count.values()) == 0 else sum(ap_clients_count.values())
+    return 0 if len(ap_clients_count.values()) == 0 else int(sum(ap_clients_count.values()))
 
 def getMappedDate(date):
     date = date.replace(year=2015, month=1)
