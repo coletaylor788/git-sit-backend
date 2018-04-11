@@ -3,7 +3,9 @@ import numpy as np
 import matplotlib.pylab as plt
 from matplotlib.pylab import rcParams
 from sklearn.neural_network import MLPRegressor
+from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import cross_val_score
+
 
 import csv
 #https://www.analyticsvidhya.com/blog/2016/02/time-series-forecasting-codes-python/
@@ -15,6 +17,7 @@ def read_data(file):
     y = []
     with open(file) as datafile:
         reader = csv.reader(datafile)
+        next(reader)
         for row in reader:
             x.append(row[:-1])
             y.append(row[-1])
@@ -24,12 +27,24 @@ def read_data(file):
         #    y.append(fields[-1])
     return x, y
 
+# NOTES:
+# G and O (?) have been converted to 0 (Klaus) for regression
+# P has been converted to -1 (Klaus)
 def experiment_train_independent_model():
     x, y = read_data(IND_DATA_FILE)
-    clf = MLPRegressor()
-    scores = cross_val_score(clf, x, y, cv=10)
+    #x = [[1,2],[3,4],[1,3]]
+    #y = [1,4,5]
+    np_x = np.array(x)
+    np_y = np.array(y)
+    np_x = np_x.astype(np.dtype('float'))
+    np_y = np_y.astype(np.dtype('float'))
+
+    clf = MLPRegressor(verbose=True)
+    print("Training")
+    scores = cross_val_score(clf, np_x, np_y, cv=5)
     print(scores)
-    #clf.fit(x, y)
+    #print("Training")
+    #clf.fit(np_x, np_y)
     
 
 experiment_train_independent_model()
