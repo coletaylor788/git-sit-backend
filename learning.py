@@ -5,6 +5,7 @@ from matplotlib.pylab import rcParams
 from sklearn.neural_network import MLPRegressor
 from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import cross_val_score
+from sklearn.externals import joblib
 
 
 import csv
@@ -40,11 +41,13 @@ def experiment_train_independent_model():
     np_y = np_y.astype(np.dtype('float'))
 
     clf = MLPRegressor(verbose=True)
-    print("Training")
-    scores = cross_val_score(clf, np_x, np_y, cv=5)
-    print(scores)
     #print("Training")
-    #clf.fit(np_x, np_y)
+    #scores = cross_val_score(clf, np_x, np_y, cv=5)
+    #print(scores)
+    
+    print("Training")
+    clf.fit(np_x, np_y)
+    joblib.dump(clf, 'independent_model.pkl')
     
 
 experiment_train_independent_model()
