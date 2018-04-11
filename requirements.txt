@@ -8,5 +8,3 @@ psycopg2-binary
 firebase-admin
 pyrebase
 sklearn
-matplotlib
-python-tk

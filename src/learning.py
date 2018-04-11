@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pylab as plt
-from matplotlib.pylab import rcParams
+#import matplotlib.pylab as plt
+#from matplotlib.pylab import rcParams
 
 from sklearn.neural_network import MLPRegressor
 from sklearn.neural_network import MLPClassifier
@@ -67,7 +67,7 @@ def experiment_train_independent_model():
     #clf.fit(np_x, np_y)
     #joblib.dump(clf, 'independent_model_temp.pkl')
 
-experiment_train_independent_model()
+#experiment_train_independent_model()
 
 ######################################
 # Prediction
