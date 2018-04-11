@@ -6,6 +6,7 @@ from sklearn.neural_network import MLPRegressor
 from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import cross_val_score
 from sklearn.externals import joblib
+import sys
 
 
 import csv
@@ -55,7 +56,11 @@ def experiment_train_independent_model():
 # Prediction
 
 # Read Models
-ind_clf = joblib.load('independent_model.pkl')
+try:
+    ind_clf = joblib.load('src/independent_model.pkl')
+except:
+    print("Model not loaded")
+    sys.stdout.flush()
 
 def predict_results_independent(building_id, floor, date):
     # Convert floor to number used in regression model

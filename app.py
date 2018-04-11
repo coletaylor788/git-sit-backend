@@ -101,7 +101,7 @@ def get_occupancy_date():
     occ = get_clients_around_date_by_building_floor(building_id, floor, date)
     return "{'occupancy': " + str(occ) + "}"
     
-@arr.route('/get-next-week-occupancy', methods=["POST"])
+@app.route('/get-next-week-occupancy', methods=["POST"])
 def get_next_week_occupancy():
     building_id = Flask.request.get_json()['location-id']
     floor = Flask.request.get_json()['floor']
