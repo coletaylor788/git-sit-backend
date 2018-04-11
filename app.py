@@ -6,6 +6,8 @@ import random
 import datetime 
 from functools import reduce
 from src.db_tools import *
+from src.learning import *
+import json
 
 OCCUPANCY_WINDOW = 300 #Milliseconds to each side of the time to get occupancy from
 
@@ -28,7 +30,6 @@ def get_clients_around_date_by_building_floor(building, floor, date):
         upper_date_str = upper_date_str[:4] + upper_date_str[4 + 1:]
     
     entries = db.child(building).order_by_key().start_at(lower_date_str).end_at(upper_date_str).get().val()
-    
     #TODO Calling .val on the query above throws an exception if no data is found
     # Should gracefully handle this
 
@@ -38,18 +39,38 @@ def get_clients_around_date_by_building_floor(building, floor, date):
         ap_name = value[1]
         ap_floor = ap_name[ap_name.find('-') + 1]
         clients = int(value[0])
-        if ap_floor == floor:
+        if ap_floor == str(floor):
             if ap_name in ap_clients.keys(): # Average the values
                 ap_clients[ap_name].append(clients)
             else:
                 ap_clients[ap_name] = [clients]
-    
+
     # Average counts of the same AP
     ap_clients_count = {}
     for ap_name, client_list in ap_clients.items():
-        ap_clients_count[ap_name] = int(round(sum(client_list) / len(client_list)))
+        ap_clients_count[ap_name] = round(sum(client_list) / len(client_list))
 
-    return 0 if len(ap_clients_count.values()) == 0 else sum(ap_clients_count.values())
+    return 0 if len(ap_clients_count.values()) == 0 else int(sum(ap_clients_count.values()))
+
+def get_clients_over_time_by_building_floor(building, floor, start_date, end_date):
+    occ_map = {}
+    curr_date = getMappedDate(datetime.datetime.now())
+    iter_date = start_date
+    last_valid_count = 0 # Used if data doesn't exist for a particular time
+
+    while iter_date != end_date:
+        occ = last_valid_count
+        if iter_date <= curr_date and iter_date >= curr_date - datetime.timedelta(hours=1): # Query
+            occ = get_clients_around_date_by_building_floor(building, floor, iter_date)
+        else: # Predict
+            occ = predict_results_independent(building, floor, iter_date)
+        
+        occ_map[str(iter_date)] = occ
+        
+        last_valid_count = occ
+        iter_date += datetime.timedelta(minutes=1)
+    
+    return occ_map
 
 def getMappedDate(date):
     date = date.replace(year=2015, month=1)
@@ -80,14 +101,38 @@ def get_occupancy_date():
     occ = get_clients_around_date_by_building_floor(building_id, floor, date)
     return "{'occupancy': " + str(occ) + "}"
     
+@app.route('/get-next-week-occupancy', methods=["POST"])
+def get_next_week_occupancy():
+    building_id = Flask.request.get_json()['location-id']
+    floor = Flask.request.get_json()['floor']
+    curr_date = getMappedDate(datetime.datetime.now())
+    curr_date = curr_date.replace(second=0,microsecond=0)
+    end_date = curr_date + datetime.timedelta(days=7)
+
+    occ_map = get_clients_over_time_by_building_floor(building_id, floor, curr_date, end_date)
+
+    return json.dumps(occ_map)
+
+@app.route('/get-last-week-occupancy', methods=["POST"])
+def get_last_week_occupancy():
+    building_id = Flask.request.get_json()['location-id']
+    floor = Flask.request.get_json()['floor']
+    curr_date = getMappedDate(datetime.datetime.now())
+    curr_date = curr_date.replace(second=0,microsecond=0)
+    start_date = curr_date - datetime.timedelta(days=7)
+
+    occ_map = get_clients_over_time_by_building_floor(building_id, floor, start_date, curr_date)
+
+    return json.dumps(occ_map)
+
 """
 Main method starts the Flask server
 """
 if __name__ == '__main__':
     # Bind to PORT if defined, otherwise default to 5000.
     port = int(os.environ.get('PORT', 5000))
-    #app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=port)
 
     #TESTING ONLY! Leave commented in production
-    app.run(host='127.0.0.1', port=port)
+    # app.run(host='127.0.0.1', port=port)
    

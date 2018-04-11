@@ -1,3 +1,5 @@
 .env
 auth.json
 temp_auth.json
+.csv
+.pyc

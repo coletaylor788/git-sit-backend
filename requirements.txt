@@ -3,7 +3,7 @@ flask-cors
 scipy
 peakutils
 numpy
-panda
+pandas
 psycopg2-binary
 firebase-admin
 pyrebase
