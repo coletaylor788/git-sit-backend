@@ -1,11 +1,13 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pylab as plt
-from matplotlib.pylab import rcParams
+#import matplotlib.pylab as plt
+#from matplotlib.pylab import rcParams
+
 from sklearn.neural_network import MLPRegressor
 from sklearn.neural_network import MLPClassifier
-from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import KFold, cross_val_score
 from sklearn.externals import joblib
+
 import sys
 from datetime import datetime
 
@@ -44,8 +46,8 @@ def read_time_series_data(file):
 # P has been converted to -1 (Klaus)
 def experiment_train_independent_model():
     x, y = read_data(IND_DATA_FILE)
-    #x = [[1,2],[3,4],[1,3]]
-    #y = [1,4,5]
+    #x = [[1,2],[3,4],[1,3],[1,2],[3,4],[1,3],[1,2],[3,4],[1,3],[5,6]]
+    #y = [1,4,5,1,4,5,1,4,5,6]
     np_x = np.array(x)
     np_y = np.array(y)
     np_x = np_x.astype(np.dtype('float'))
@@ -53,12 +55,27 @@ def experiment_train_independent_model():
 
     clf = MLPRegressor(verbose=True)
     print("Training")
-    scores = cross_val_score(clf, np_x, np_y, cv=5, )
-    print(scores)
+    k_fold = KFold(n_splits=5)
+    scores = []
+    i = 0
+    for train_indices, test_indices in k_fold.split(np_x):
+        model = clf.fit(np_x[train_indices], np_y[train_indices])
+        score = model.score(np_x[test_indices], np_y[test_indices])
+        scores.append(score)
+
+        joblib.dump(model, 'ind_model_' + str(i) + '.pkl')
+
+        i += 1
+
+    with open('ind_model_cv_results.txt', 'w') as outfile:
+        outfile.write(str(scores))
+
+    #scores = cross_val_score(clf, np_x, np_y, cv=5, )
+    #print(scores)
     
-    print("Training")
-    clf.fit(np_x, np_y)
-    joblib.dump(clf, 'independent_model_temp.pkl')
+    #print("Training")
+    #clf.fit(np_x, np_y)
+    #joblib.dump(clf, 'independent_model_temp.pkl')
 
 def experiment_train_time_series_model():
     x,y = read_time_series_data(TS_DATA_FILE)
@@ -104,9 +121,11 @@ def predict_results_independent(building_id, floor, date):
     minute = date.time().minute
 
     x = [building_id, floor, day_of_week, hour, minute]
-    np_x = np.array([x])
+    np_x = np.array(x)
+    np_x = np_x.reshape(1, -1)
     np_x = np_x.astype(np.dtype('float'))
-    return ind_clf.predict(np_x)
+    np_y = ind_clf.predict(np_x)
+    return int(np_y[0])
     
 def predict_next_minute(building_id, floor, date, window):
     if floor == 'G' or floor == 'O':
@@ -132,22 +151,5 @@ def get_short_term_model_accuracy(num_samples):
     for _ in range(num_samples):
         samples.append(csvfile.sample())
     
-    for sample in 
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    for sample in samples:
+        pass
