@@ -65,7 +65,7 @@ def get_clients_over_time_by_building_floor(building, floor, start_date, end_dat
         else: # Query
             occ = get_clients_around_date_by_building_floor(building, floor, iter_date)
         
-        occ_map[iter_date] = occ
+        occ_map[str(iter_date)] = occ
         
         last_valid_count = occ
         iter_date += datetime.timedelta(minutes=1)
@@ -106,9 +106,23 @@ def get_next_week_occupancy():
     building_id = Flask.request.get_json()['location-id']
     floor = Flask.request.get_json()['floor']
     curr_date = getMappedDate(datetime.datetime.now())
-    emd_date = curr_date + datetime.timedelta(days=7)
+    curr_date = curr_date.replace(second=0,microsecond=0)
+    end_date = curr_date + datetime.timedelta(days=7)
 
     occ_map = get_clients_over_time_by_building_floor(building_id, floor, curr_date, end_date)
+
+    return json.dumps(occ_map)
+
+@app.route('/get-last-week-occupancy', methods=["POST"])
+def get_last_week_occupancy():
+    building_id = Flask.request.get_json()['location-id']
+    floor = Flask.request.get_json()['floor']
+    curr_date = getMappedDate(datetime.datetime.now())
+    curr_date = curr_date.replace(second=0,microsecond=0)
+    start_date = curr_date - datetime.timedelta(days=7)
+
+    #TODO Needs optimized to only query firebase once...
+    occ_map = get_clients_over_time_by_building_floor(building_id, floor, start_date, curr_date)
 
     return json.dumps(occ_map)
 

@@ -76,4 +76,8 @@ def predict_results_independent(building_id, floor, date):
     minute = date.time().minute
 
     x = [building_id, floor, day_of_week, hour, minute]
-    return ind_clf.predict(x)
+    np_x = np.array(x)
+    np_x = np_x.reshape(1, -1)
+    np_x = np_x.astype(np.dtype('float'))
+    np_y = ind_clf.predict(np_x)
+    return int(np_y[0])
