@@ -41,13 +41,34 @@ def experiment_train_independent_model():
     np_y = np_y.astype(np.dtype('float'))
 
     clf = MLPRegressor(verbose=True)
-    #print("Training")
-    #scores = cross_val_score(clf, np_x, np_y, cv=5)
-    #print(scores)
+    print("Training")
+    scores = cross_val_score(clf, np_x, np_y, cv=5, )
+    print(scores)
     
     print("Training")
     clf.fit(np_x, np_y)
-    joblib.dump(clf, 'independent_model.pkl')
-    
+    joblib.dump(clf, 'independent_model_temp.pkl')
 
-experiment_train_independent_model()
+#experiment_train_independent_model()
+
+######################################
+# Prediction
+
+# Read Models
+ind_clf = joblib.load('independent_model.pkl')
+
+def predict_results_independent(building_id, floor, date):
+    # Convert floor to number used in regression model
+    if floor == 'G' or floor == 'O':
+        floor = 0
+    elif floor == 'P':
+        floor = -1
+    elif floor == 'R':
+        floor = -2
+
+    day_of_week = date.weekday()
+    hour = date.time().hour
+    minute = date.time().minute
+
+    x = [building_id, floor, day_of_week, hour, minute]
+    return ind_clf.predict(x)

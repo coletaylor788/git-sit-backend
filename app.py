@@ -6,6 +6,8 @@ import random
 import datetime 
 from functools import reduce
 from src.db_tools import *
+from src.learning import *
+import json
 
 OCCUPANCY_WINDOW = 300 #Milliseconds to each side of the time to get occupancy from
 
@@ -50,6 +52,26 @@ def get_clients_around_date_by_building_floor(building, floor, date):
 
     return 0 if len(ap_clients_count.values()) == 0 else int(sum(ap_clients_count.values()))
 
+def get_clients_over_time_by_building_floor(building, floor, start_date, end_date):
+    occ_map = {}
+    curr_date = getMappedDate(datetime.datetime.now())
+    iter_date = start_date
+    last_valid_count = 0 # Used if data doesn't exist for a particular time
+
+    while iter_date != end_date:
+        occ = last_valid_count
+        if iter_date > curr_date: # Predict
+            occ = predict_results_independent(building, floor, iter_date)
+        else: # Query
+            occ = get_clients_around_date_by_building_floor(building, floor, iter_date)
+        
+        occ_map[iter_date] = occ
+        
+        last_valid_count = occ
+        iter_date += datetime.timedelta(minutes=1)
+    
+    return occ_map
+
 def getMappedDate(date):
     date = date.replace(year=2015, month=1)
     if date.day > 30:
@@ -79,6 +101,17 @@ def get_occupancy_date():
     occ = get_clients_around_date_by_building_floor(building_id, floor, date)
     return "{'occupancy': " + str(occ) + "}"
     
+@arr.route('/get-next-week-occupancy', methods=["POST"])
+def get_next_week_occupancy():
+    building_id = Flask.request.get_json()['location-id']
+    floor = Flask.request.get_json()['floor']
+    curr_date = getMappedDate(datetime.datetime.now())
+    emd_date = curr_date + datetime.timedelta(days=7)
+
+    occ_map = get_clients_over_time_by_building_floor(building_id, floor, curr_date, end_date)
+
+    return json.dumps(occ_map)
+
 """
 Main method starts the Flask server
 """
