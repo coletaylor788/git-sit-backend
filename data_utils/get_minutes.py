@@ -2,7 +2,7 @@ import csv
 import datetime
 
 data_file = "output_formatted.csv"
-out_file = 'out.csv'
+out_file = 'data_by_floor_minute.csv'
 ap_minute_counts = {} #building -> ap -> minute -> list of connection counts
 floor_minute_counts = {} #building -> floor -> minute -> number of connections
 #Number of connections will be determined by averaging each AP on the floor over a 10 minute range and summing over all APs on the floor
@@ -121,7 +121,7 @@ def build_time_series_dataset(window_size, window_frequency, moving_average=Fals
     write_time_series_rows(out_file, rows, window_size)
 
 def build_independent_dataset():
-    in_file = 'out.csv'
+    in_file = 'data_by_floor_minute.csv'
     out_file = 'independent_dataset.csv'
     f = open(in_file, 'r')
     reader = csv.reader(f)
@@ -160,5 +160,6 @@ def process_floor(floor):
         floor = -2
     return floor
       
-# build_independent_dataset()
-build_time_series_dataset(5,1);
+build_independent_dataset()
+# build_time_series_dataset(5,1);
+# main()
