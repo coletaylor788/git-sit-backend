@@ -88,6 +88,12 @@ def build_independent_dataset():
     for row in reader:
       building = row[0]
       floor = row[1]
+      if floor == 'G' or floor == 'O':
+        floor = 0
+      if floor == 'P':
+        floor = -1
+      if floor == 'R':
+        floor = -2
       minute = row[2]
       minute_offset = datetime.timedelta(minutes=int(minute))
       new_date = base_date + minute_offset
