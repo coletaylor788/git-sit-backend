@@ -9,4 +9,4 @@ firebase-admin
 pyrebase
 sklearn
 matplotlib
-tkinter
+python-tk
