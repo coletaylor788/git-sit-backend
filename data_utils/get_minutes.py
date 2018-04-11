@@ -71,7 +71,54 @@ def writeFloorCountsToFile():
             for minute in floor_minute_counts[building][floor]:
                 writer.writerow([building,floor,minute,floor_minute_counts[building][floor][minute]])
 
-#main()
+
+def write_time_series_rows(file, rows, window_size):
+    f = open(file, 'w', newline='')
+    writer = csv.writer(f)
+    headers = ['building','floor','minute','count']
+    for x in range(window_size):
+        headers.append('t' + str(x))
+    writer.writerow(headers)
+    for row in rows:
+        writer.writerow(row)
+
+def get_window_entries(window, frequency):
+    window_values = []
+    for i in range(0,len(window), frequency):
+        window_values.append(window[i])
+    return window_values
+
+#Window Size is the number of minutes that are kept in the window
+#Window_frequency is how many minutes are between samples of the window 
+#   ie Window_size = 60 with window_frequency = 5 would return 20 entries: 0, 5, 10, etc...)
+def build_time_series_dataset(window_size, window_frequency, moving_average=False):
+    in_file = "data_by_floor_minute.csv"
+    out_file = "time_series_dataset.csv"
+    f = open(in_file, 'r')
+    reader = csv.reader(f)
+    next(reader) #Need to skip the title row
+    rows = []
+    curBuilding = None
+    curFloor = None
+    window = [0] * window_size
+    counter = window_size
+    for row in reader:
+        building = row[0]
+        floor = row[1] = process_floor(row[1])
+        occupancy = row[3]
+        if building != curBuilding and curFloor != floor:
+            counter = window_size
+            curBuilding = building
+            curFloor = floor
+        else: 
+            if counter != 0:
+                counter -= 1
+            else:
+                row.extend(get_window_entries(window, window_frequency))
+                rows.append(row)
+        window.pop()
+        window.insert(0,occupancy)
+    write_time_series_rows(out_file, rows, window_size)
 
 def build_independent_dataset():
     in_file = 'out.csv'
@@ -87,7 +134,7 @@ def build_independent_dataset():
     next(reader) #Need to skip the title row
     for row in reader:
       building = row[0]
-      floor = row[1]
+      floor = row[1] #Replace this with process_floor function? Don't want to break things so not changing it - Jake
       if floor == 'G' or floor == 'O':
         floor = 0
       if floor == 'P':
@@ -104,4 +151,14 @@ def build_independent_dataset():
 
       writer.writerow([building, floor, day_of_week, time.hour, time.minute, count])
 
-build_independent_dataset()
+def process_floor(floor):
+    if floor == 'G' or floor == 'O':
+        floor = 0
+    if floor == 'P':
+        floor = -1
+    if floor == 'R':
+        floor = -2
+    return floor
+      
+# build_independent_dataset()
+build_time_series_dataset(5,1);
