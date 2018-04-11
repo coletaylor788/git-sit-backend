@@ -60,10 +60,10 @@ def get_clients_over_time_by_building_floor(building, floor, start_date, end_dat
 
     while iter_date != end_date:
         occ = last_valid_count
-        if iter_date > curr_date: # Predict
-            occ = predict_results_independent(building, floor, iter_date)
-        else: # Query
+        if iter_date <= curr_date and iter_date >= curr_date - datetime.timedelta(hours=1): # Query
             occ = get_clients_around_date_by_building_floor(building, floor, iter_date)
+        else: # Predict
+            occ = predict_results_independent(building, floor, iter_date)
         
         occ_map[str(iter_date)] = occ
         
@@ -121,7 +121,6 @@ def get_last_week_occupancy():
     curr_date = curr_date.replace(second=0,microsecond=0)
     start_date = curr_date - datetime.timedelta(days=7)
 
-    #TODO Needs optimized to only query firebase once...
     occ_map = get_clients_over_time_by_building_floor(building_id, floor, start_date, curr_date)
 
     return json.dumps(occ_map)
