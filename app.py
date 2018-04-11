@@ -61,9 +61,21 @@ def get_clients_over_time_by_building_floor(building, floor, start_date, end_dat
     last_valid_count = 0 # Used if data doesn't exist for a particular time
 
     #TODO make this get the list of occupancies for short term prediction all at once instead of calling 1, 2, 3, 4, .... LONG_MODEL_START_TIME
-    while iter_date != end_date:    
+    while iter_date <= end_date:
         occ = last_valid_count
-        if iter_date <= curr_date and iter_date >= curr_date - datetime.timedelta(hours=1): # Query
+        
+        if iter_date >= curr_date and end_date < curr_date + LONG_MODEL_START_TIME: #If end date is before we start using the long term model
+            window = []
+            for i in range(0,5):
+              window.append(get_clients_around_date_by_building_floor(building, floor, iter_date - datetime.timedelta(minutes=i)))
+            occList = predict_time_series_minute(building, floor, curr_date, end_date, window)
+            x = 0
+            while iter_date <= end_date:
+                occ_map[str(iter_date)] = occList[i]
+                iter_date += datetime.timedelta(minutes=1)
+                x += 1;
+            iter_date = end_date
+        elif iter_date <= curr_date and iter_date >= curr_date - datetime.timedelta(hours=1): # Query
             occ = get_clients_around_date_by_building_floor(building, floor, iter_date)
         else: # Predict
             if iter_date < curr_date + LONG_MODEL_START_TIME:
@@ -71,7 +83,13 @@ def get_clients_over_time_by_building_floor(building, floor, start_date, end_dat
                 window = []
                 for i in range(0,5):
                   window.append(get_clients_around_date_by_building_floor(building, floor, iter_date - datetime.timedelta(minutes=i)))
-                occ = predict_time_series_minute(building, floor, curr_date, iter_date, window)
+                occList = predict_time_series_minute(building, floor, curr_date, curr_date + LONG_MODEL_START_TIME, window)
+                x = 0
+                while iter_date <= curr_date + LONG_MODEL_START_TIME:
+                    occ_map[str(iter_date)] = occList[i]
+                    iter_date += datetime.timedelta(minutes=1)
+                    x += 1;
+                iter_date = curr_date + LONG_MODEL_START_TIME
             else:
                 occ = predict_results_independent(building, floor, iter_date)
             # occ = predict_results_independent(building, floor, iter_date)
