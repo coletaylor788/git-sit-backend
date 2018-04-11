@@ -8,8 +8,10 @@ from functools import reduce
 from src.db_tools import *
 from src.learning import *
 import json
+import sys
 
-OCCUPANCY_WINDOW = 300 #Milliseconds to each side of the time to get occupancy from
+OCCUPANCY_WINDOW = 300 #Seconds to each side of the time to get occupancy from
+LONG_MODEL_START_TIME = datetime.timedelta(minutes=30)
 
 app = Flask.Flask(__name__, static_url_path='')
 CORS(app)
@@ -58,12 +60,21 @@ def get_clients_over_time_by_building_floor(building, floor, start_date, end_dat
     iter_date = start_date
     last_valid_count = 0 # Used if data doesn't exist for a particular time
 
-    while iter_date != end_date:
+    #TODO make this get the list of occupancies for short term prediction all at once instead of calling 1, 2, 3, 4, .... LONG_MODEL_START_TIME
+    while iter_date != end_date:    
         occ = last_valid_count
         if iter_date <= curr_date and iter_date >= curr_date - datetime.timedelta(hours=1): # Query
             occ = get_clients_around_date_by_building_floor(building, floor, iter_date)
         else: # Predict
-            occ = predict_results_independent(building, floor, iter_date)
+            if iter_date < curr_date + LONG_MODEL_START_TIME:
+                #Get window
+                window = []
+                for i in range(0,5):
+                  window.append(get_clients_around_date_by_building_floor(building, floor, iter_date - datetime.timedelta(minutes=i)))
+                occ = predict_time_series_minute(building, floor, curr_date, iter_date, window)
+            else:
+                occ = predict_results_independent(building, floor, iter_date)
+            # occ = predict_results_independent(building, floor, iter_date)
         
         occ_map[str(iter_date)] = occ
         
