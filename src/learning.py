@@ -168,7 +168,7 @@ def get_short_term_model_accuracy(num_samples, num_minutes):
     return ([minute_error/num_samples for minute_error in error_mean_squared], error_pct_off)
       
 # print(get_short_term_model_accuracy(1000, 10))
-experiment_train_time_series_model()
+# experiment_train_time_series_model()
 # experiment_train_independent_model()
       
       
