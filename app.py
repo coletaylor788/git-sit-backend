@@ -11,7 +11,7 @@ import json
 import sys
 
 OCCUPANCY_WINDOW = 300 #Seconds to each side of the time to get occupancy from
-LONG_MODEL_START_TIME = datetime.timedelta(minutes=30)
+LONG_MODEL_START_TIME = datetime.timedelta(minutes=123)
 
 app = Flask.Flask(__name__, static_url_path='')
 CORS(app)
