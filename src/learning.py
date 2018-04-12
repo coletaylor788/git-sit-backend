@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.neural_network import MLPRegressor
 from sklearn.neural_network import MLPClassifier
+from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import KFold, cross_val_score
 from sklearn.externals import joblib
 
@@ -45,7 +46,8 @@ def experiment_train_independent_model():
     np_x = np_x.astype(np.dtype('float'))
     np_y = np_y.astype(np.dtype('float'))
 
-    clf = MLPRegressor(verbose=True)
+    clf = MLPRegressor(hidden_layer_sizes=(50, 50), verbose=True)
+    #clf = LinearRegression()
     print("Training")
     k_fold = KFold(n_splits=5)
     scores = []
@@ -187,7 +189,7 @@ except:
     
 # print(get_short_term_model_accuracy(5000, 60, 3))
 # experiment_train_time_series_model()
-# experiment_train_independent_model()
+experiment_train_independent_model()
       
       
       
