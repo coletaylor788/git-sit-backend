@@ -98,7 +98,7 @@ def get_clients_over_time_by_building_floor(building, floor, start_date, end_dat
         
         last_valid_count = occ
         iter_date += interval
-    
+
     hour_occ_map = {}
     for date in occ_map:
         occupancy = occ_map[date]
@@ -189,8 +189,35 @@ def get_last_week_occupancy():
     curr_date = getMappedDate(datetime.datetime.now())
     curr_date = curr_date.replace(second=0,microsecond=0)
     start_date = curr_date - datetime.timedelta(days=7)
+    interval = datetime.timedelta(days=7)
 
-    occ_map = get_clients_over_time_by_building_floor(building_id, floor, start_date, curr_date)
+    occ_map = get_clients_over_time_by_building_floor(building_id, floor, start_date, curr_date, interval)
+
+    return json.dumps(occ_map)
+
+@app.route('/get-last-day-occupancy', methods=["POST"])
+def get_last_day_occupancy():
+    building_id = Flask.request.get_json()['location-id']
+    floor = Flask.request.get_json()['floor']
+    curr_date = getMappedDate(datetime.datetime.now())
+    curr_date = curr_date.replace(second=0,microsecond=0)
+    start_date = curr_date - datetime.timedelta(days=1)
+    interval = datetime.timedelta(minutes=30)
+
+    occ_map = get_clients_over_time_by_building_floor(building_id, floor, start_date, curr_date, interval)
+
+    return json.dumps(occ_map)
+
+@app.route('/get-last-hour-occupancy', methods=["POST"])
+def get_last_hour_occupancy():
+    building_id = Flask.request.get_json()['location-id']
+    floor = Flask.request.get_json()['floor']
+    curr_date = getMappedDate(datetime.datetime.now())
+    curr_date = curr_date.replace(second=0,microsecond=0)
+    start_date = curr_date - datetime.timedelta(hours=1)
+    interval = datetime.timedelta(minutes=1)
+
+    occ_map = get_clients_over_time_by_building_floor(building_id, floor, start_date, curr_date, interval)
 
     return json.dumps(occ_map)
 
