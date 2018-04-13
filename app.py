@@ -11,7 +11,7 @@ import json
 import sys
 
 OCCUPANCY_WINDOW = 300 #Seconds to each side of the time to get occupancy from
-LONG_MODEL_START_TIME = datetime.timedelta(minutes=30)
+LONG_MODEL_START_TIME = datetime.timedelta(minutes=123)
 
 app = Flask.Flask(__name__, static_url_path='')
 CORS(app)
@@ -71,7 +71,7 @@ def get_clients_over_time_by_building_floor(building, floor, start_date, end_dat
             occList = predict_time_series_minute(building, floor, curr_date, end_date, window)
             x = 0
             while iter_date <= end_date:
-                occ_map[str(iter_date)] = occList[i]
+                occ_map[iter_date] = occList[i]
                 iter_date += datetime.timedelta(minutes=1)
                 x += 1;
             iter_date = end_date
@@ -86,7 +86,7 @@ def get_clients_over_time_by_building_floor(building, floor, start_date, end_dat
                 occList = predict_time_series_minute(building, floor, curr_date, curr_date + LONG_MODEL_START_TIME, window)
                 x = 0
                 while iter_date <= curr_date + LONG_MODEL_START_TIME:
-                    occ_map[str(iter_date)] = occList[i]
+                    occ_map[iter_date] = occList[i]
                     iter_date += datetime.timedelta(minutes=1)
                     x += 1;
                 iter_date = curr_date + LONG_MODEL_START_TIME
@@ -94,12 +94,25 @@ def get_clients_over_time_by_building_floor(building, floor, start_date, end_dat
                 occ = predict_results_independent(building, floor, iter_date)
             # occ = predict_results_independent(building, floor, iter_date)
         
-        occ_map[str(iter_date)] = occ
+        occ_map[iter_date] = occ
         
         last_valid_count = occ
         iter_date += interval
     
-    return occ_map
+    hour_occ_map = {}
+    for date in occ_map:
+        occupancy = occ_map[date]
+        if date.minute > 30:
+            date = datetime.datetime(date.year, date.month, date.day, date.hour + 1 if date.hour + 1 < 24 else 0)
+        else:
+            date = datetime.datetime(date.year, date.month, date.day, date.hour)
+        if date not in hour_occ_map:
+            hour_occ_map[str(date)] = []
+        hour_occ_map[str(date)].append(occupancy)
+        
+    hour_occ_map = {dt: sum(occupancy)/len(occupancy) for (dt, occupancy) in hour_occ_map.items()}
+    
+    return hour_occ_map
 
 def getMappedDate(date):
     date = date.replace(year=2015, month=1)

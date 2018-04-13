@@ -189,7 +189,7 @@ except:
     
 # print(get_short_term_model_accuracy(5000, 60, 3))
 # experiment_train_time_series_model()
-experiment_train_independent_model()
+# experiment_train_independent_model()
       
       
       
