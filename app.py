@@ -54,7 +54,7 @@ def get_clients_around_date_by_building_floor(building, floor, date):
 
     return 0 if len(ap_clients_count.values()) == 0 else int(sum(ap_clients_count.values()))
 
-def get_clients_over_time_by_building_floor(building, floor, start_date, end_date):
+def get_clients_over_time_by_building_floor(building, floor, start_date, end_date, interval):
     occ_map = {}
     curr_date = getMappedDate(datetime.datetime.now())
     iter_date = start_date
@@ -97,7 +97,7 @@ def get_clients_over_time_by_building_floor(building, floor, start_date, end_dat
         occ_map[str(iter_date)] = occ
         
         last_valid_count = occ
-        iter_date += datetime.timedelta(minutes=1)
+        iter_date += interval
     
     return occ_map
 
@@ -137,8 +137,35 @@ def get_next_week_occupancy():
     curr_date = getMappedDate(datetime.datetime.now())
     curr_date = curr_date.replace(second=0,microsecond=0)
     end_date = curr_date + datetime.timedelta(days=7)
+    interval = datetime.timedelta(hours=6)
 
-    occ_map = get_clients_over_time_by_building_floor(building_id, floor, curr_date, end_date)
+    occ_map = get_clients_over_time_by_building_floor(building_id, floor, curr_date, end_date, interval)
+
+    return json.dumps(occ_map)
+
+@app.route('/get-next-day-occupancy', methods=["POST"])
+def get_next_day_occupancy():
+    building_id = Flask.request.get_json()['location-id']
+    floor = Flask.request.get_json()['floor']
+    curr_date = getMappedDate(datetime.datetime.now())
+    curr_date = curr_date.replace(second=0,microsecond=0)
+    end_date = curr_date + datetime.timedelta(days=1)
+    interval = datetime.timedelta(minutes=30)
+
+    occ_map = get_clients_over_time_by_building_floor(building_id, floor, curr_date, end_date, interval)
+
+    return json.dumps(occ_map)
+
+@app.route('/get-next-hour-occupancy', methods=["POST"])
+def get_next_hour_occupancy():
+    building_id = Flask.request.get_json()['location-id']
+    floor = Flask.request.get_json()['floor']
+    curr_date = getMappedDate(datetime.datetime.now())
+    curr_date = curr_date.replace(second=0,microsecond=0)
+    end_date = curr_date + datetime.timedelta(hours=1)
+    interval = datetime.timedelta(minutes=1)
+
+    occ_map = get_clients_over_time_by_building_floor(building_id, floor, curr_date, end_date, interval)
 
     return json.dumps(occ_map)
 
