@@ -54,6 +54,38 @@ def get_clients_around_date_by_building_floor(building, floor, date):
 
     return 0 if len(ap_clients_count.values()) == 0 else int(sum(ap_clients_count.values()))
 
+def get_historical_data_from_firebase(building, floor, start, end):
+    occ_map = {}
+    lower_date_str = start.strftime("%b %d %H:%M:%S %Y")
+    if lower_date_str[4] == '0':
+        lower_date_str = lower_date_str[:4] + lower_date_str[4 + 1:]
+    end = end if end < datetime.datetime.now() else datetime.datetime.now()
+    end = getMappedDate(end)
+    upper_date_str = end.strftime("%b %d %H:%M:%S %Y")
+    if upper_date_str[4] == '0':
+        upper_date_str = upper_date_str[:4] + upper_date_str[4 + 1:]
+        
+    print(lower_date_str, file=sys.stderr)
+    print(upper_date_str, file=sys.stderr)
+        
+    x = str(datetime.datetime.now())
+    print(x, file=sys.stderr)
+    entries = db.child(building).order_by_key().start_at(lower_date_str).end_at(upper_date_str).get()
+    y = str(datetime.datetime.now())
+    print(y, file=sys.stderr)
+    
+    for entry in entries.each():
+        # print(str(entry), file=sys.stderr)
+        date = entry.key()
+        date = datetime.datetime.strptime(date, "%b %d %H:%M:%S %Y")
+        client_count = int(entry.val()[0])
+        ap_name = entry.val()[1]
+        ap_floor = ap_name[ap_name.find('-') + 1]
+        if ap_floor == str(floor):
+            occ_map[date.strftime("%Y-%m-%d %H:%M:%S")] = client_count
+            
+    return occ_map
+        
 def get_clients_over_time_by_building_floor(building, floor, start_date, end_date, interval = datetime.timedelta(minutes=1)):
     occ_map = {}
     str_occ_map = {}
@@ -88,7 +120,7 @@ def get_clients_over_time_by_building_floor(building, floor, start_date, end_dat
                   window.append(get_clients_around_date_by_building_floor(building, floor, iter_date - datetime.timedelta(minutes=i)))
                 occList = predict_time_series_minute(building, floor, curr_date, curr_date + LONG_MODEL_START_TIME, window)
                 x = 0
-                print(str_occ_map, file=sys.stderr)
+                # print(str_occ_map, file=sys.stderr)
                 while iter_date <= curr_date + LONG_MODEL_START_TIME:
                     str_occ_map[iter_date.strftime("%Y-%m-%d %H:%M:%S")] = occList[x]
                     iter_date += datetime.timedelta(minutes=1)
@@ -99,8 +131,7 @@ def get_clients_over_time_by_building_floor(building, floor, start_date, end_dat
             iter_date += datetime.timedelta(minutes = 1)
         
         str_occ_map[iter_date.strftime("%Y-%m-%d %H:%M:%S")] = occ
-        # print(str_occ_map, file=sys.stderr)
-        # print(occ_map, file=sys.stderr)
+        
         iter_date += datetime.timedelta(minutes = 1)
         last_valid_count = occ
         
@@ -185,11 +216,14 @@ def get_last_week_occupancy():
     floor = Flask.request.get_json()['floor']
     curr_date = getMappedDate(datetime.datetime.now())
     curr_date = curr_date.replace(second=0,microsecond=0)
-    start_date = curr_date - datetime.timedelta(days=7)
-    interval = datetime.timedelta(hours=1)
+    start_date = curr_date - datetime.timedelta(days=1)
+    interval = datetime.timedelta(hours=6)
 
-    occ_map = get_clients_over_time_by_building_floor(building_id, floor, start_date, curr_date, interval)
+    # occ_map = get_clients_over_time_by_building_floor(building_id, floor, start_date, curr_date, interval)
     # occ_map = get_clients_over_interval_from_occ_map(occ_map, interval)
+    
+    occ_map = get_historical_data_from_firebase(building_id, floor, start_date, curr_date)
+    occ_map = get_clients_over_interval_from_occ_map(occ_map, interval)
     
     return json.dumps(occ_map)
 
@@ -202,8 +236,9 @@ def get_last_day_occupancy():
     start_date = curr_date - datetime.timedelta(days=1)
     interval = datetime.timedelta(minutes=30)
 
-    occ_map = get_clients_over_time_by_building_floor(building_id, floor, start_date, curr_date)
-
+    occ_map = get_historical_data_from_firebase(building_id, floor, start_date, curr_date)
+    occ_map = get_clients_over_interval_from_occ_map(occ_map, interval)
+    
     return json.dumps(occ_map)
 
 @app.route('/get-last-hour-occupancy', methods=["POST"])
@@ -215,7 +250,8 @@ def get_last_hour_occupancy():
     start_date = curr_date - datetime.timedelta(hours=1)
     interval = datetime.timedelta(minutes=1)
 
-    occ_map = get_clients_over_time_by_building_floor(building_id, floor, start_date, curr_date)
+    occ_map = get_historical_data_from_firebase(building_id, floor, start_date, curr_date)
+    occ_map = get_clients_over_interval_from_occ_map(occ_map, interval)
     
     return json.dumps(occ_map)
 
