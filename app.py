@@ -19,11 +19,15 @@ CORS(app)
 db = connect_to_database()
 
 import sys
+
+
+
+
 def get_clients_around_date_by_building_floor(building, floor, date):
     lower_date = date + datetime.timedelta(0,-1 * OCCUPANCY_WINDOW)
     upper_date = date + datetime.timedelta(0,OCCUPANCY_WINDOW)
 
-    # Convert to format in database
+    # Convert to datetime format in database
     lower_date_str = lower_date.strftime("%b %d %H:%M:%S %Y")
     if lower_date_str[4] == '0':
         lower_date_str = lower_date_str[:4] + lower_date_str[4 + 1:]
@@ -31,9 +35,8 @@ def get_clients_around_date_by_building_floor(building, floor, date):
     if upper_date_str[4] == '0':
         upper_date_str = upper_date_str[:4] + upper_date_str[4 + 1:]
     
+    # Query Firebase
     entries = db.child(building).order_by_key().start_at(lower_date_str).end_at(upper_date_str).get().val()
-    #TODO Calling .val on the query above throws an exception if no data is found
-    # Should gracefully handle this
 
     # Consolidate into map from AP to clients
     ap_clients = {}

@@ -129,16 +129,20 @@ def predict_next_minute(building_id, floor, minute, window):
     return ts_clf.predict(np_x)
     
 def predict_time_series_minute(building, floor, curr_date, goal_time, window):
+
+    # Setup iteration bounds
     num_minutes = int((goal_time - curr_date).seconds/60)
     minute = (curr_date.day - 1)* 1440 + curr_date.hour * 60 + curr_date.minute
     next_minute_predicted = None
     occupancies = []
-    print(num_minutes)
+
+    # Make sequence predictions using current data and then predicted data
     for i in range(num_minutes + 1):
         next_minute_predicted = predict_next_minute(building, floor, minute + 1, window)[0]
         occupancies.append(next_minute_predicted)
         window.pop()
         window.insert(0,next_minute_predicted)
+
     return occupancies
     
 def get_short_term_model_accuracy(num_samples, num_minutes, frequency = 1):
